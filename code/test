@@ -1,0 +1,46 @@
+import paramiko
+import socket
+
+def connect_to_server(hostname, username, password=None, key_file=None, port=22):
+    """
+    Connect to a remote server via SSH
+    """
+    try:
+        # Create SSH client
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        # Connect using password or key file
+        if key_file:
+            ssh.connect(hostname, port=port, username=username, key_filename=key_file)
+        else:
+            ssh.connect(hostname, port=port, username=username, password=password)
+        
+        print(f"Successfully connected to {hostname}")
+        return ssh
+        
+    except paramiko.AuthenticationException:
+        print("Authentication failed")
+        return None
+    except socket.gaierror:
+        print("Unable to resolve hostname")
+        return None
+    except Exception as e:
+        print(f"Connection error: {e}")
+        return None
+
+# Example usage
+if __name__ == "__main__":
+    # Connect with password
+    connection = connect_to_server("192.168.1.100", "username", password="password")
+    
+    # Or connect with SSH key
+    # connection = connect_to_server("192.168.1.100", "username", key_file="/path/to/private/key")
+    
+    if connection:
+        # Execute a command
+        stdin, stdout, stderr = connection.exec_command("ls -la")
+        print(stdout.read().decode())
+        
+        # Close connection
+        connection.close()
